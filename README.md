@@ -20,7 +20,7 @@ Overview:
 
 Install script dependencies:
 ```
-pip install https://github.com/barbu-it/nexus3ctl/archive/main.zip
+pip install git+https://github.com/barbu-it/nexus3ctl
 ```
 
 Check it is correctly installed
