@@ -231,8 +231,15 @@ def control_list(config, defaults=None, delim=",", default="ALL"):
 
 class Nexus3CtlException(Exception):
     """Generic Nexus3Ctl exception"""
-
     rc = 1
+
+class Nexus3CtlConfigError(Nexus3CtlException):
+    """Configuration error"""
+    rc = 2
+
+class Nexus3CtlHTTPError(Nexus3CtlException):
+    """API error"""
+    rc = 3
 
 
 class ResourceTypes(str, ExtendedEnum):
@@ -282,20 +289,25 @@ class Nexus3Ctl:
         # Check input
         if not nexus_url:
             msg = "Missing nexus host, use '--url' option"
-            raise Nexus3CtlException(msg)
+            raise Nexus3CtlConfigError(msg)
         elif not nexus_url.startswith('http'):
             msg = f"Nexus URL does not start by http:// or https://, got: {nexus_url}"
-            raise Nexus3CtlException(msg)
+            raise Nexus3CtlConfigError(msg)
         elif not nexus_user:
             msg = "Missing nexus user, use '--user' option"
-            raise Nexus3CtlException(msg)
+            raise Nexus3CtlConfigError(msg)
         elif not nexus_pass:
             msg = "Missing nexus password, use '--pass' option"
-            raise Nexus3CtlException(msg)
+            raise Nexus3CtlConfigError(msg)
 
         logger.debug(f"Nexus url: {self.api_url}")
         logger.debug(f"Nexus credentials: {nexus_user}, {len(nexus_pass)*'*'}")
         self.api_auth = HTTPBasicAuth(nexus_user, nexus_pass)
+        self.api_creds = {
+                "url": nexus_url,
+                "user": nexus_user,
+                "pass": nexus_pass,
+                }
 
         # Manage dry mode
         self.dry_mode_str = ""
@@ -353,10 +365,11 @@ class Nexus3Ctl:
                 raise Nexus3CtlException(f"Unsupported HTTP method: {method}")
 
         if out.status_code == 401:
-            pprint(common_kwargs)
-            pprint(out.__dict__)
+            # pprint(common_kwargs)
+            # pprint(out.__dict__)
+            # pprint (self.api_creds)
             msg = "Could not authenticate against API, got 401"
-            raise Nexus3CtlException(msg)
+            raise Nexus3CtlHTTPError(msg)
 
         return out
 
@@ -1011,7 +1024,7 @@ def cli_ls(
     elif fmt == OutputFormat.YAML:
         print(yaml.dump(out))
     else:
-        raise Nexus3CtlException(f"Unsupported format: {fmt}")
+        raise Nexus3CtlConfigError(f"Unsupported format: {fmt}")
 
 
 @cli_app.command("export")
