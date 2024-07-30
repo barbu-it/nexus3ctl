@@ -20,13 +20,19 @@ Overview:
 
 Install script dependencies:
 ```
-pip install -r requirements.txt
+pip install https://github.com/barbu-it/nexus3ctl/archive/main.zip
+```
+
+Check it is correctly installed
+```
+$ nexus3ctl --version
+0.1.0
 ```
 
 Configure credentials:
 ```
 export NEXUS3_URL=https://my-nexus.example.org
-export NEXUS3_USERNAME=rcordier
+export NEXUS3_USERNAME=USER
 export NEXUS3_PASSWORD=MYPASS
 ```
 Note it is also possible to use `--user`, '--pass' and `--url` directly from the command line.
@@ -34,28 +40,27 @@ Note it is also possible to use `--user`, '--pass' and `--url` directly from the
 
 ## Usage
 
-
 To see what's on server:
 ```
-nexus3ctl.py ls
-nexus3ctl.py ls -a
+nexus3ctl ls
+nexus3ctl ls -a
 ```
 
 You can filter output by types:
 ```
-nexus3ctl.py ls --types roles,ldap
+nexus3ctl ls --types roles,ldap
 ```
 
 List specific resources by exact names:
 ```
-nexus3ctl.py ls --types ldap -l pattern
+./nexus3ctl ls --types ldap -l pattern
 ```
 
 List specific resources with other selectors:
 ```
-nexus3ctl.py ls --types repos,roles -l prod -s contains
-nexus3ctl.py ls --types repos -l dev,prod -s endswith
-nexus3ctl.py ls --types repos -l 'pattern1,pattern2,p.t{2}.rn[3-9]' -s regex
+nexus3ctl ls --types repos,roles -l prod -s contains
+nexus3ctl ls --types repos -l dev,prod -s endswith
+nexus3ctl ls --types repos -l 'pattern1,pattern2,p.t{2}.rn[3-9]' -s regex
 ```
 
 All those options are available for `import` and `export` commands.
@@ -97,18 +102,18 @@ You can store those files in a git repository. This would allow you to track con
 
 To run an export:
 ```
-nexus3ctl.py export
+nexus3ctl export
 ```
 A default `out` directory will be created, with all resources in it.
 
 Export specific types:
 ```
-nexus3ctl.py export --types ldap,roles,repos
+nexus3ctl export --types ldap,roles,repos
 ```
 
 Export to another dir, or run a backup:
 ```
-nexus3ctl.py -d backup_$(date --iso-8601) export
+nexus3ctl -d backup_$(date --iso-8601) export
 ```
 
 ### Import command
@@ -116,23 +121,46 @@ nexus3ctl.py -d backup_$(date --iso-8601) export
 As simple as this:
 ```
 # Test in dry mode first
-nexus3ctl.py -d ../other_instance/out -n import
+nexus3ctl -d ../other_instance/out -n import
 
 # Run the import
-nexus3ctl.py -d ../other_instance/out import
+nexus3ctl -d ../other_instance/out import
 ```
 Like export, you can use `--types`, `--limit` and `--select` options.
 
+### Work with many instances
 
+With the help of (direnv](https://direnv.net/), you can create a folder structure like:
+```
+instances/
+|-- dev-nexus.localhost
+|   `-- .envrc
+|-- nexus.company.org
+|   `-- .envrc
+`-- nexus02.company.org
+|   `-- .envrc
+```
+
+You should adapt the content of the `.envrc` file according each instances, like `instances/dev-nexus.localhost/.envrc`:
+```
+# Direnv support
+source_up_if_exists 2>/dev/null || true
+
+export NEXUS3_URL=https://local-dev-nexus.localhost
+export NEXUS3_USERNAME=admin
+export NEXUS3_PASSWORD=admin
+```
+
+Then cd into the instance you want to get, all credentials should be loaded in your shell session.
 
 
 ## Help usage
 
 Show full usage:
 ```
-$ nexus3ctl.py --help
+$ nexus3ctl --help
 
- Usage: nexus3ctl.py [OPTIONS] COMMAND [ARGS]...
+ Usage: nexus3ctl [OPTIONS] COMMAND [ARGS]...
 
  Nexus3Ctl, manage Nexus configurations
 
@@ -169,6 +197,18 @@ $ nexus3ctl.py --help
 │ ls       List all resources                                                                      │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
+
+## Develop
+
+Follow this procedure:
+```
+git clone https://github.com/barbu-it/nexus3ctl.git nexus3ctl_dev
+cd nexus3ctl_dev
+python -m venv .venv
+. .venv/bin/activate
+pip install -e .
+```
+
 
 ## Informations
 
