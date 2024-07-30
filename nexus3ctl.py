@@ -278,8 +278,23 @@ class Nexus3Ctl:
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+
+        # Check input
+        if not nexus_url:
+            msg = "Missing nexus host, use '--url' option"
+            raise Nexus3CtlException(msg)
+        elif not nexus_url.startswith('http'):
+            msg = f"Nexus URL does not start by http:// or https://, got: {nexus_url}"
+            raise Nexus3CtlException(msg)
+        elif not nexus_user:
+            msg = "Missing nexus user, use '--user' option"
+            raise Nexus3CtlException(msg)
+        elif not nexus_pass:
+            msg = "Missing nexus password, use '--pass' option"
+            raise Nexus3CtlException(msg)
+
         logger.debug(f"Nexus url: {self.api_url}")
-        logger.debug(f"Nexus credentials: {nexus_user}, {nexus_pass}")
+        logger.debug(f"Nexus credentials: {nexus_user}, {len(nexus_pass)*'*'}")
         self.api_auth = HTTPBasicAuth(nexus_user, nexus_pass)
 
         # Manage dry mode
@@ -857,18 +872,21 @@ def main(
         envvar="NEXUS3_DRY",
     ),
     nexus_url: str = typer.Option(
+        None,
         "-l",
         "--url",
         help="Nexus3 domain.",
         envvar="NEXUS3_URL",
     ),
     nexus_user: str = typer.Option(
+        None,
         "-u",
         "--user",
         help="Nexus3 username.",
         envvar="NEXUS3_USERNAME",
     ),
     nexus_pass: str = typer.Option(
+        None,
         "-p",
         "--pass",
         help="Nexus3 password.",
